@@ -104,6 +104,13 @@ function! plug#begin(...)
   let g:plugs_order = []
   let s:triggers = {}
 
+  let s:blacklist = []
+  if !empty($VIMBLACKLIST)
+    let split = split($VIMBLACKLIST, '\\\@<!\%(\\\\\)*\zs,')
+    let s:blacklist = map(split, 'substitute(v:val,''\\\([\\,]\)'',''\1'',"g")')
+  endif
+  let s:blacklist += get(g:, 'pathogen_disabled', [])
+
   call s:define_commands()
   return 1
 endfunction
@@ -157,6 +164,9 @@ function! plug#end()
 
   filetype off
   for name in g:plugs_order
+    if index(s:blacklist, name) != -1
+      continue
+    endif
     let plug = g:plugs[name]
     if get(s:loaded, name, 0) || !has_key(plug, 'on') && !has_key(plug, 'for')
       let s:loaded[name] = 1
